@@ -1,49 +1,23 @@
 # Credit Card Fraud Detection
 
 A classification project comparing three models for detecting fraudulent
-credit card transactions, with an emphasis on picking the right evaluation
-metric and the right business tradeoff, not just training a model.
+credit card transactions.
 
-## The problem
+## The Problem:
 
 A bank processes far more legitimate transactions than fraudulent ones.
 The system needs to flag likely-fraudulent transactions for review, but
 flagging too aggressively means blocking real customers' legitimate
-purchases, a real cost, not a free action.
+purchases which can cause major issues.
 
-## Data
+## Data:
 
-The real ULB Credit Card Fraud Detection dataset (Worldline / Machine
-Learning Group, Université Libre de Bruxelles), the standard, widely-cited
-dataset for this problem, sourced via a public mirror since direct Kaggle
-authentication wasn't available in this environment. **284,807 real
-transactions** made by European cardholders over two days in September
-2013, of which **492 are fraud (0.17%)**. Features `V1`-`V28` are PCA-
-transformed versions of the original transaction details. The bank
-anonymized the real features before publishing the data, so the model
-learns from patterns in the transformed space without access to what the
-original features actually represent.
+A dataset from Kaggle called Credit Card Fraud Detection which shows 
+anonymized credit card transactions labeled as fraudulent or genuine.
+"The dataset contains transactions made by credit cards in September 2013 by European cardholders.
+This dataset presents transactions that occurred in two days, where we have 492 frauds out of 284,807 transactions. The dataset is highly unbalanced, the positive class (frauds) account for 0.172% of all transactions."
 
-## SQL
-
-`src/load_to_sql.py` loads the data into SQLite as two related tables
-(`transactions` and an `hourly_summary` aggregate) and runs queries using
-window functions and a CTE, not just basic `SELECT`s:
-
-- A rolling 3-hour average fraud rate using `AVG() OVER (... ROWS BETWEEN
-  2 PRECEDING AND CURRENT ROW)`
-- Ranking each fraudulent transaction's amount within its own hour using
-  `RANK() OVER (PARTITION BY hour ORDER BY Amount DESC)`
-- A CTE identifying hours where the fraud rate exceeded 3x the overall
-  average
-
-That last query surfaced a real finding: **hour 26 had a fraud rate of
-2.05%, roughly 7.6x the overall average of 0.27%**, a genuinely useful
-signal that time-of-day/session context matters, worth flagging as a
-feature-engineering idea for future work (this project doesn't currently
-use hour as a model feature, but the SQL exploration suggests it should).
-
-## Models compared
+## Models Compared:
 
 Three classifiers were trained and evaluated, not just one: logistic
 regression, random forest, and XGBoost, three of the most commonly used
@@ -97,9 +71,7 @@ fraud-detection/
 ## Running it
 
 The raw dataset (150MB) and generated SQLite database are excluded from
-this repo via `.gitignore`. GitHub blocks files over 100MB, and raw data
-files don't belong in version control regardless of size.
-
+this repo via `.gitignore`.
 ```bash
 pip install pandas scikit-learn xgboost
 
